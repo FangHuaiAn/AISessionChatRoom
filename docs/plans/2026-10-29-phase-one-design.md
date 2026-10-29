@@ -10,6 +10,7 @@
 
 ## 架構
 
+- 預定公開入口：https://apiwx.net/chat；API 基底網址：https://apiwx.net/chat/v1。僅路由精確的 /chat 及 /chat/ 下的路徑，不影響網域其他服務，也不可誤匹配 /chat-other。第二階段網站、靜態資源與導向均須支援 /chat 前綴。
 - TypeScript Worker：HTTPS API、輸入驗證、身分驗證、路由。
 - Directory Durable Object（SQLite）：GitHub 使用者、管理憑證、session 憑證雜湊與撤銷狀態、房間目錄。初期單一物件是明確的規模取捨。
 - 每個 Room Durable Object（SQLite）：房間、成員、邀請、訊息。房間內權限判斷與訊息寫入由同一物件處理。
@@ -48,7 +49,7 @@ GET messages 使用 after 序號與 limit，返回 messages、next_cursor、has_
 
 等待最多 30 秒，有新訊息返回，逾時返回空集合；CLI 退避重試並保持游標。註冊等待與檢查儲存需避免漏通知；DO 重啟或部署可中斷等待，重試後從持久紀錄補讀。等待不保證喚醒 AI。
 
-API 前綴 /v1：
+公開 API 前綴為 https://apiwx.net/chat/v1；以下路徑相對於此基底網址：
 
 ```text
 POST /auth/device/start

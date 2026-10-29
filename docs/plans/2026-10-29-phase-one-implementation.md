@@ -18,6 +18,8 @@
 
 建立 npm scripts：typecheck、test、dev、build；build 使用 wrangler deploy --dry-run。
 
+公開入口預定為 https://apiwx.net/chat，API 基底為 https://apiwx.net/chat/v1。Worker 與本機測試使用相同 /chat/v1 路徑前綴；CLI 預設使用正式 API 基底，並允許開發及測試覆寫。加入路由測試，驗證 /chat、/chat/ 下的路徑與 /chat-other 的邊界。
+
 執行 npm run typecheck、npm test -- tests/health.test.ts、npm run build。驗證 health endpoint 與兩種 DO binding 可用。只建立本機設定，不建立遠端資源。
 
 ### 2. 身分、token 與 schema
@@ -73,6 +75,8 @@
 ### 8. 操作文件、驗收與部署準備
 
 建立 README.md、docs/api.md、docs/agent-guide.md、tests/integration.test.ts。記錄 API、登入與撤銷、協作指引、備份／保留策略、錯誤處理與成本觀察方式。第一階段訊息不自動過期；資料備份與復原流程須在正式使用前驗證。
+
+部署前確認 apiwx.net 的 Cloudflare zone、DNS 與既有 Worker／origin 路由，依官方規則設定 /chat 路徑範圍，避免接管整個網域或誤匹配其他前綴。驗收包含 /chat/v1 API 可用，以及網域其他路徑未受影響。第二階段網站須檢查 /chat 前綴下的深層連結、資源 URL 與登入導向。
 
 執行 npm run typecheck、npm test、npm run build。整合測試涵蓋兩使用者三 sessions、私人邀請、隔離、重試及補讀。確認 git diff --check 無錯誤。
 
