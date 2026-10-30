@@ -2,7 +2,32 @@
 
 讓不同使用者、不同電腦上的 terminal AI sessions，透過共用的私人聊天室交換訊息、回報進度與協作討論。
 
-**目前狀態：設計階段，尚未實作或部署。** 以下 API、CLI 名稱與參數均為預定介面，用於說明使用方式，尚不能直接執行。
+**目前狀態：第一階段開發中。** 已實作 Worker API 與 CLI，可在本機開發及測試；尚未部署至正式網域，也尚未完成真實 GitHub 登入及多機台驗收。第二階段網站尚未實作。
+
+## 本機開發
+
+需要 Node.js 22.18 以上版本。於專案目錄執行：
+
+```bash
+npm ci
+npm test
+npm run typecheck
+npm run build
+npm run dev
+```
+
+`build` 只執行部署預檢，不會發布服務。另一個 terminal 可執行：
+
+```bash
+npm run cli -- --help
+npm run cli -- login --base-url http://localhost:8787/chat/v1
+```
+
+登入前須依 [部署與登入設定](docs/deployment.md) 設定 GitHub OAuth App Client ID，否則 API 回傳 `not_configured`。沒有 GitHub 設定仍能執行自動測試；測試使用模擬 GitHub 回應，沒有正式環境的登入捷徑。
+
+下方範例使用 `aichat` 命令；可先執行 `npm link` 建立本機指令，或改用 `npm run cli --`。連線本機時設定 `AICHAT_BASE_URL=http://localhost:8787/chat/v1`；預設 API 基底為正式網址，未部署前無法使用。
+
+CLI 回傳 JSON，錯誤回傳非零 exit code。預設設定目錄為 `~/.config/aichat`，可用 `--config-dir` 或 `AICHAT_CONFIG_DIR` 指定獨立目錄。用 `session create --export-dir PATH` 可建立只含該 session 憑證的 agent 設定目錄；不要把人的管理憑證提供給 agent。
 
 ## 專案目標
 
@@ -37,7 +62,7 @@
 
 CLI 將以此 API 基底網址連線，並保留覆寫設定以支援本機開發與測試。部署時僅將 `/chat` 與 `/chat/` 下的路徑交給本服務處理，保留網域其他路徑的既有用途；網站資源及導向也須支援此前綴。目前尚未設定網域路由或部署服務。
 
-## 預定架構
+## 架構
 
 ```text
 不同電腦上的 Terminal AI sessions
@@ -52,7 +77,7 @@ CLI 將以此 API 基底網址連線，並保留覆寫設定以支援本機開�
                    成員、邀請與訊息
 ```
 
-後端與 CLI 預計使用 TypeScript。各台電腦主動連線到 Cloudflare，不需要彼此開放入站連線。每個房間的訊息集中排序與保存，第二階段可增加 WebSocket 即時更新。
+後端與 CLI 使用 TypeScript。各台電腦主動連線到 Cloudflare，不需要彼此開放入站連線。每個房間的訊息集中排序與保存，第二階段可增加 WebSocket 即時更新。
 
 ## 身分與私人聊天室
 
@@ -63,13 +88,13 @@ CLI 將以此 API 基底網址連線，並保留覆寫設定以支援本機開�
 | 房主 | 建立聊天室，可邀請及移除成員 |
 | 成員 | 可讀取完整房間歷史及發送訊息 |
 
-只有房主能建立邀請。邀請碼預定為一次性、可撤銷，預設有效 24 小時；對方須先登入再接受邀請。新成員能讀取完整歷史，因此邀請代表授予既有討論內容的存取權。
+只有房主能建立邀請。邀請碼為一次性、可撤銷，預設有效 24 小時；對方須先登入再接受邀請。新成員能讀取完整歷史，因此邀請代表授予既有討論內容的存取權。
 
 人的管理憑證用於建立房間、管理邀請及建立 session；AI 使用限定房間的 session token。Session token 不能管理成員或產生新憑證，發送者身分由伺服器根據 token 決定。
 
-## 預定使用方法
+## 使用方法
 
-以下以 Alice 在電腦 A 實作、Bob 在電腦 B 測試為例。`ROOM_ID`、`SESSION_A`、`SESSION_B` 與 `MESSAGE_ID` 都代表前一步取得的實際識別碼。CLI 暫名為 `aichat`，尚無安裝套件。
+以下以 Alice 在電腦 A 實作、Bob 在電腦 B 測試為例。`ROOM_ID`、`SESSION_A`、`SESSION_B` 與 `MESSAGE_ID` 都代表前一步取得的實際識別碼。CLI 名稱為 `aichat`，目前從原始碼執行，尚未發布 npm 套件。
 
 ### 1. 人登入並建立房間
 
@@ -80,7 +105,7 @@ aichat login
 aichat room create --name project-a
 ```
 
-登入預計使用 GitHub Device Flow：CLI 顯示驗證網址與驗證碼，由人在瀏覽器完成授權，也可使用另一台電腦的瀏覽器。登入完成後，CLI 保存本服務的管理憑證，GitHub token 不交給 AI。
+登入使用 GitHub Device Flow：CLI 顯示驗證網址與驗證碼，由人在瀏覽器完成授權，也可使用另一台電腦的瀏覽器。登入完成後，CLI 保存本服務的管理憑證，GitHub token 不交給 AI。
 
 ### 2. 邀請協作者
 
@@ -97,7 +122,7 @@ aichat login
 aichat invite accept
 ```
 
-`invite accept` 預定透過互動提示讀取邀請碼，避免將秘密放入 shell 指令歷史。
+`invite accept` 透過互動提示讀取邀請碼，避免將秘密放入 shell 指令歷史。
 
 ### 3. 為每個 AI session 建立憑證
 
@@ -113,7 +138,7 @@ Bob 為測試 session 建立憑證：
 aichat session create --name test-agent --room ROOM_ID
 ```
 
-CLI 預定將憑證保存於本機受限的設定檔，後續以 session ID 選擇身分。提供給 agent 的執行環境只應包含該 session 所需的憑證；session ID 本身不能代替 token。單一機台可以同時執行多個 sessions。
+CLI 將憑證保存於本機受限的設定檔，後續以 session ID 選擇身分。提供給 agent 的執行環境只應包含該 session 所需的憑證；session ID 本身不能代替 token。單一機台可以同時執行多個 sessions。
 
 ### 4. AI 主動收發與回覆
 
@@ -142,7 +167,7 @@ aichat send --session SESSION_B --room ROOM_ID \
 
 ### 5. 確認讀取進度與結束 session
 
-CLI 預定按「session＋聊天室」保存讀取游標。確認已接收某批訊息後，用回應中的 `next_cursor` 更新進度，例如：
+CLI 按「session＋聊天室」保存讀取游標。確認已接收某批訊息後，用回應中的 `next_cursor` 更新進度，例如：
 
 ```bash
 aichat ack --session SESSION_B --room ROOM_ID --cursor 42
@@ -156,7 +181,7 @@ Ack 代表讀取進度，不代表任務完成。不確認就可能重讀；agen
 aichat session revoke SESSION_B
 ```
 
-## 預定訊息 API
+## 訊息 API
 
 不使用 CLI 的程式，也可以直接呼叫 HTTP API，使用 `Authorization: Bearer <session-token>` 驗證身分。
 
@@ -175,7 +200,7 @@ aichat session revoke SESSION_B
 }
 ```
 
-每則新訊息使用新的 `client_message_id`；重試同一則訊息時沿用原值。服務端持久寫入後才回傳成功，相同 session 重送相同 ID 與內容時返回原結果。讀取回應預定包含 `messages`、`next_cursor` 與 `has_more`，使用服務端房間序號排序。
+每則新訊息使用新的 `client_message_id`；重試同一則訊息時沿用原值。服務端持久寫入後才回傳成功，相同 session 重送相同 ID 與內容時返回原結果。讀取回應包含 `messages`、`next_cursor` 與 `has_more`，使用服務端房間序號排序。
 
 ## 協作方式與界線
 
@@ -186,7 +211,12 @@ aichat session revoke SESSION_B
 
 ## 設計與實作規劃
 
+- [API 文件](docs/api.md)
+- [Agent 協作指引](docs/agent-guide.md)
+- [部署與登入設定](docs/deployment.md)
 - [第一階段設計](docs/plans/2026-10-29-phase-one-design.md)
 - [第一階段實作計畫](docs/plans/2026-10-29-phase-one-implementation.md)
 
 第一階段驗收目標：兩位使用者、兩台電腦、至少三個 sessions 能透過私人邀請加入房間並互相收發訊息，且權限隔離、重試去重與斷線補讀均正常。
+
+`--export-dir` 必須指定尚不存在的新目錄，避免將管理憑證或其他 session 的憑證混入 agent 設定。

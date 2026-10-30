@@ -1,1 +1,31 @@
-{"name":"ai-session-chatroom","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"wrangler dev","test":"vitest run","typecheck":"tsc --noEmit","types":"wrangler types","build":"wrangler deploy --dry-run"},"engines":{"node":">=22"},"devDependencies":{"@cloudflare/vitest-plugin":"1.4.10","@types/node":"26.6.6","typescript":"7.0.2","vitest":"4.1.12","wrangler":"4.155.0"}}
+{
+  "name": "ai-session-chatroom",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "npm run test:worker && npm run test:cli",
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types",
+    "build": "wrangler deploy --dry-run",
+    "format": "prettier --write src tests cli package.json tsconfig.json vitest.config.ts wrangler.jsonc",
+    "test:worker": "vitest run",
+    "test:cli": "vitest run --config vitest.cli.config.ts",
+    "cli": "node cli/index.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.10",
+    "@types/node": "26.6.6",
+    "prettier": "3.9.10",
+    "typescript": "7.0.2",
+    "vitest": "4.1.12",
+    "wrangler": "4.155.0"
+  },
+  "bin": {
+    "aichat": "cli/index.ts"
+  }
+}
