@@ -35,9 +35,38 @@ Client ID 是公開識別碼；本專案的 device flow 不需要 Client Secret�
 - 查閱 apiwx.net 的既有 DNS、Worker routes 與 origin，確認沒有覆蓋其他服務。
 - 設定只涵蓋 `/chat` 與 `/chat/` 下的路由，不能誤匹配 `/chat-other`。
 - 設定 GitHub Client ID 後驗證真實登入、兩位使用者與至少三個 sessions。
-- 檢查 long polling 的執行時間及請求成本。現有 `wrangler.jsonc` 未配置正式路由，且停用 workers.dev 與 preview URLs。
+- 檢查 long polling 的執行時間及請求成本。現有 `wrangler.jsonc` 已配置下面兩條正式路由，但尚未發布；workers.dev 與 preview URLs 停用。
 
-正式路由與部署命令將於帳號及現有網域設定確認後補齊，不能將部署預檢視為正式發布。
+部署設定綁定已核對的 Cloudflare 帳號與 apiwx.net zone，路由只有：
+
+```text
+https://apiwx.net/chat
+https://apiwx.net/chat/*
+```
+
+不要改成 `/chat*`，因為它會涵蓋 `/chat-other`。Cloudflare 路由會把 query string 算入匹配，因此含查詢參數的入口請使用 `/chat/?...`；精確 `/chat` 用於無參數入口並導向 `/chat/`。[Cloudflare 路由規則](https://developers.cloudflare.com/workers/configuration/routing/routes/)
+
+唯讀檢查與基準紀錄：
+
+```bash
+npm run preflight
+```
+
+此命令核對帳號／zone、讀取既有 routes 與 DNS 記錄（權限允許時）、取得公開 DNS 及 HTTP 基準，保存至 `.wrangler/deployment-baseline.json`，不修改 Cloudflare。檔案已存在時拒絕覆寫；新的部署週期應先保存舊紀錄再重新取得基準。
+
+2026-11-02 實測：zone active、Worker routes 為空、首頁 200、`/chat`／`/chat/`／`/chat-other` 為 404；公開 DNS 和 HTTP cf-ray 顯示流量經過 Cloudflare。現有 Wrangler OAuth 權限對 DNS records API 返回 403，仍需在 Cloudflare Dashboard 檢查 apex DNS 的 proxied 設定與 origin。不能把 API 403 當成沒有 DNS 記錄。
+
+完成備份／復原演練、DNS 檢查及 GitHub App 設定後，才進行正式發布。公開 Client ID 可用環境變數傳入（不是 Client Secret）：
+
+```bash
+# 先將 GITHUB_CLIENT_ID 設成已啟用 Device Flow 的公開 Client ID。
+# 以下命令確實會發布，build 則只有 dry-run。
+test -n "$GITHUB_CLIENT_ID" && npx wrangler deploy --var "GITHUB_CLIENT_ID:$GITHUB_CLIENT_ID"
+npm run verify:deployment
+```
+
+`verify:deployment` 檢查實際 routes 精確符合範圍、未改掉其他 Worker routes、health 正常、網站可用，以及首頁和 `/chat-other` 的狀態／導向與基準一致。它不代替真實登入、多機台協作或全站內容驗收。部署前與部署後須使用同一份基準；本機檢查不能被稱為正式發布。
+
 
 ## 資料與復原
 

@@ -18,11 +18,13 @@
 
 - 2026-11-02 新增房主 `room repair-index`，按實際 membership 分頁重建 Directory；API／CLI 回歸與本機 HTTP 索引遺失演練通過。修復不授予成員資格，也不繞過 Room 授權。
 
+- 2026-11-02 新增 `preflight`／`verify:deployment` 與精確 `/chat`、`/chat/*` 設定；唯讀基準取得及 dry-run 通過。未做遠端寫入。
+
 ## 尚未完成；不可宣稱專案完成
 
 1. 真實 GitHub OAuth App Client ID 尚未設定。已詢問已啟用 Device Flow 的公開 Client ID；不需要 Client Secret。
 2. 已知房間的房主索引修復與本機遺失演練已完成；全域房間清單復原、資料備份／復原工具與演練尚未完成。Directory 與 Room 非跨物件交易，Room membership 才是授權依據。
-3. 正式 Cloudflare 路由、部署及遠端驗證尚未完成；須重新檢查 apiwx.net 既有服務，僅接管 /chat 與 /chat/*。
+3. 正式路由設定及唯讀 preflight 已完成；尚未發布。2026-11-02 核對 zone active、既有 routes 為空、首頁 200、chat 入口 404。DNS API 權限不足，仍待 dashboard 檢查。部署後驗證腳本已提供，尚無上線成功證據。
 4. 真實 GitHub 登入、兩位使用者／兩台實體機台／三 sessions 驗收尚未做。
 5. 網站手機視覺、下載及最新修正的實際瀏覽器驗收仍待補齊。
 

@@ -12,7 +12,9 @@
     "format": "prettier --write src tests cli public package.json tsconfig.json vitest.config.ts vitest.cli.config.ts wrangler.jsonc",
     "test:worker": "vitest run",
     "test:cli": "vitest run --config vitest.cli.config.ts",
-    "cli": "node cli/index.ts"
+    "cli": "node cli/index.ts",
+    "preflight": "node scripts/deployment-preflight.mjs",
+    "verify:deployment": "node scripts/deployment-preflight.mjs --after"
   },
   "engines": {
     "node": ">=22.18"

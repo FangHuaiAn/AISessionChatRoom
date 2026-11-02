@@ -1,6 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ai-session-chatroom",
+  "account_id": "0cfbb72c4eab7aaf66611ab26f2e9d75",
+  "routes": [
+    {
+      "pattern": "https://apiwx.net/chat",
+      "zone_id": "bf943899cf00a7ea36f8d1f077b477d2",
+    },
+    {
+      "pattern": "https://apiwx.net/chat/*",
+      "zone_id": "bf943899cf00a7ea36f8d1f077b477d2",
+    },
+  ],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
