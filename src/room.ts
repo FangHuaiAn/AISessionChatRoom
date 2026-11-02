@@ -1,8 +1,9 @@
+import { RoomRecovery, type RoomBackup } from "./recovery";
 import { DurableObject } from "cloudflare:workers";
 import type { Principal } from "./contracts";
 import { hashToken, randomToken } from "./auth/tokens";
 import { string } from "./http";
-type Message = {
+export type Message = {
   id: string;
   seq: number;
   room_id: string;
@@ -18,7 +19,7 @@ export interface MessageInput {
   client_message_id: string;
   reply_to?: string;
 }
-type RoomInfo = {
+export type RoomInfo = {
   id: string;
   name: string;
   owner_id: string;
@@ -41,6 +42,21 @@ export class Room extends DurableObject<Env> {
       CREATE TABLE IF NOT EXISTS members (user_id TEXT PRIMARY KEY,joined_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS invites (id TEXT PRIMARY KEY,hash TEXT UNIQUE NOT NULL,expires_at INTEGER NOT NULL,revoked INTEGER NOT NULL DEFAULT 0,used_by TEXT);
       CREATE TABLE IF NOT EXISTS messages (seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE NOT NULL,room_id TEXT NOT NULL,user_id TEXT NOT NULL,session_id TEXT NOT NULL,body TEXT NOT NULL,reply_to TEXT,client_message_id TEXT NOT NULL,created_at INTEGER NOT NULL,UNIQUE(session_id,client_message_id));`);
+  }
+  backupHeader() {
+    return new RoomRecovery(this.ctx).backupHeader();
+  }
+  backupPage(after: number, through: number) {
+    return new RoomRecovery(this.ctx).backupPage(after, through);
+  }
+  restoreBegin(header: RoomBackup) {
+    return new RoomRecovery(this.ctx).begin(header);
+  }
+  restorePage(snapshotId: string, after: number, messages: Message[]) {
+    return new RoomRecovery(this.ctx).page(snapshotId, after, messages);
+  }
+  restoreFinish(snapshotId: string) {
+    return new RoomRecovery(this.ctx).finish(snapshotId);
   }
   private info(): RoomInfo {
     const row = this.ctx.storage.sql

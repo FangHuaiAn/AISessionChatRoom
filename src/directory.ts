@@ -1,3 +1,4 @@
+import { integer, string } from "./http";
 import { DurableObject } from "cloudflare:workers";
 import type { CredentialInput, Principal } from "./contracts";
 import { hashToken, randomToken } from "./auth/tokens";
@@ -41,6 +42,17 @@ export class Directory extends DurableObject<Env> {
     this.ctx.storage.sql.exec(
       "CREATE TABLE IF NOT EXISTS room_index (user_id TEXT NOT NULL, room_id TEXT NOT NULL, PRIMARY KEY(user_id,room_id))",
     );
+    this.ctx.storage.sql.exec(
+      "CREATE TABLE IF NOT EXISTS room_registry (seq INTEGER PRIMARY KEY AUTOINCREMENT,room_id TEXT UNIQUE NOT NULL)",
+    );
+    if (
+      !this.ctx.storage.sql
+        .exec("SELECT seq FROM room_registry LIMIT 1")
+        .toArray().length
+    )
+      this.ctx.storage.sql.exec(
+        "INSERT INTO room_registry (room_id) SELECT DISTINCT room_id FROM room_index ORDER BY room_id",
+      );
     this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS logins (
       hash TEXT PRIMARY KEY, device_code TEXT NOT NULL, expires_at INTEGER NOT NULL,
       interval INTEGER NOT NULL, next_poll INTEGER NOT NULL, status TEXT NOT NULL,
@@ -95,7 +107,41 @@ export class Directory extends DurableObject<Env> {
       has_more: rows.length > 100,
     };
   }
+  registerRoom(roomId: string) {
+    string(roomId);
+    this.ctx.storage.sql.exec(
+      "INSERT INTO room_registry (room_id) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM room_registry WHERE room_id=?)",
+      roomId,
+      roomId,
+    );
+  }
+  registryHeader() {
+    return this.ctx.storage.sql
+      .exec<{ last_seq: number }>(
+        "SELECT COALESCE(MAX(seq),0) AS last_seq FROM room_registry",
+      )
+      .one();
+  }
+  registeredRooms(after: number, through: number) {
+    integer(after ?? null, 0, Number.MAX_SAFE_INTEGER, 0);
+    integer(through ?? null, 0, Number.MAX_SAFE_INTEGER, 0);
+    if (after > through) throw new Error("bad_request");
+    const rows = this.ctx.storage.sql
+      .exec<{ seq: number; room_id: string }>(
+        "SELECT * FROM room_registry WHERE seq>? AND seq<=? ORDER BY seq LIMIT 101",
+        after,
+        through,
+      )
+      .toArray();
+    const rooms = rows.slice(0, 100);
+    return {
+      rooms,
+      next_cursor: rooms.at(-1)?.seq ?? after,
+      has_more: rows.length > 100,
+    };
+  }
   recordRoom(userId: string, roomId: string) {
+    this.registerRoom(roomId);
     this.ctx.storage.sql.exec(
       "INSERT OR IGNORE INTO room_index VALUES (?,?)",
       userId,

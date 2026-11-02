@@ -1,3 +1,4 @@
+export { Maintenance } from "./maintenance";
 import { body, failure, integer, json, segment, string } from "./http";
 import { hashToken } from "./auth/tokens";
 import { sameOrigin, cookieToken, sessionCookie } from "./auth/browser";
@@ -96,6 +97,7 @@ export default {
             ? crypto.randomUUID()
             : string(input.request_id);
         const id = await hashToken(`room:${principal.userId}:${requestId}`);
+        await directory.registerRoom(id);
         const room = await env.ROOMS.getByName(id).initialize(
           id,
           name,

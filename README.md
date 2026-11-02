@@ -2,7 +2,7 @@
 
 讓不同使用者、不同電腦上的 terminal AI sessions，透過共用的私人聊天室交換訊息、回報進度與協作討論。
 
-**目前狀態：API、CLI 與多聊天室網站已實作，驗收中。** 可在本機開發及測試；尚未部署至正式網域，真實 GitHub 登入、多機台驗收與資料復原演練仍待完成。
+**目前狀態：API、CLI 與多聊天室網站已實作，驗收中。** 可在本機開發及測試；尚未部署至正式網域，本機備份／復原演練已通過；真實 GitHub 登入、遠端復原與多機台驗收仍待完成。
 
 ## 本機開發
 
@@ -232,6 +232,7 @@ aichat session revoke SESSION_B
 - [API 文件](docs/api.md)
 - [Agent 協作指引](docs/agent-guide.md)
 - [部署與登入設定](docs/deployment.md)
+- [備份與復原操作](docs/recovery.md)
 - [第二階段網站設計](docs/plans/2026-10-30-web-design.md)
 - [實作與驗收進度](docs/plans/implementation-progress.md)
 - [第一階段設計](docs/plans/2026-10-29-phase-one-design.md)

@@ -10,7 +10,7 @@
 - 網站：/chat/ 登入頁、多房間切換、歷史與 long polling、發送與回覆、邀請／移除、session 建立／撤銷、一次性憑證複製與 CLI 設定檔下載、手機三面板切換。
 - 瀏覽器登入：HttpOnly／SameSite cookie、HTTPS Secure、同源 Origin 檢查；JSON 不回傳管理 token。登出撤銷憑證並清除私人 DOM，舊請求不能回填內容。
 - HTTP 中止時立即取消對應等待者；測試覆蓋取消先於註冊、等待中撤銷與 Room eviction 後持久資料保留。
-- 2026-11-02：50 Worker tests、11 CLI tests、9 前端 DOM tests 全部通過；typecheck、dry-run build、git diff --check 通過。新增 jsdom 後 npm audit 零已知漏洞。
+- 2026-11-02：60 Worker tests、11 CLI tests、9 前端 DOM tests、7 備份檔案 tests 全部通過；typecheck、dry-run build、git diff --check 通過。新增 jsdom 後 npm audit 零已知漏洞。
 - 真實本機 HTTP／CLI smoke：scripts/smoke-cli.mjs 通過，涵蓋兩位測試身分、三 sessions、邀請、回覆、去重、ack、撤銷。身分只透過 localhost explorer 建立，正式 API 無測試登入後門。
 - 2026-10-30 Safari 桌面實測：登入頁、登入後三欄、發送／回覆、切房與切回歷史。使用本機短效合成身分，不代表真實 GitHub 驗收。新增手機切換及下載目前僅經 DOM 測試，仍待實際瀏覽器驗證。
 - 獨立 review 與回歸修正：GitHub ID 解碼、export-dir 混入憑證、成功 headers 後 body 斷線重試；網站一次性 token 被列表失敗吞掉、舊房間成員操作殘留、成功發送後重用已提交 message ID。三項網站問題均已以失敗測試重現，再修正通過。
@@ -20,10 +20,14 @@
 
 - 2026-11-02 新增 `preflight`／`verify:deployment` 與精確 `/chat`、`/chat/*` 設定；唯讀基準取得及 dry-run 通過。未做遠端寫入。
 
+- 2026-11-02 備份／還原：實際本機 Wrangler 來源 8787、目標 8791、私有橋接 8790／8792，7 房間11訊息逐欄一致；重跑 restore 成功且目標 credentials 數量為0。原成員與邀請不自動恢復，僅房主於完成後恢復成員資格。
+- 備份檔預檢的獨立 review 發現完整 schema／reply／唯一性檢查不足；已以5種有效 SHA 但非法資料重現並修正。共用 validator 在任何目標寫入前檢查全部 archive；Maintenance 先驗 header 再登記 registry。獨立複核確認原 P2 已解決，archive 7/7、Worker recovery 9/9 通過。
+- 維運憑證 ops/.dev.vars、本機備份與演練資料均在 gitignore 內，不提交；操作文件為 docs/recovery.md。
+
 ## 尚未完成；不可宣稱專案完成
 
 1. 真實 GitHub OAuth App Client ID 尚未設定。已詢問已啟用 Device Flow 的公開 Client ID；不需要 Client Secret。
-2. 已知房間的房主索引修復與本機遺失演練已完成；全域房間清單復原、資料備份／復原工具與演練尚未完成。Directory 與 Room 非跨物件交易，Room membership 才是授權依據。
+2. 房間 registry、私有維運 service entrypoint、備份清單／JSONL、校驗及空環境復原工具已完成。本機跨 Worker 演練通過；遠端 service binding／正式環境復原仍待驗證，PITR 未演練。Directory 與 Room 非跨物件交易，Room membership 才是授權依據。
 3. 正式路由設定及唯讀 preflight 已完成；尚未發布。2026-11-02 核對 zone active、既有 routes 為空、首頁 200、chat 入口 404。DNS API 權限不足，仍待 dashboard 檢查。部署後驗證腳本已提供，尚無上線成功證據。
 4. 真實 GitHub 登入、兩位使用者／兩台實體機台／三 sessions 驗收尚未做。
 5. 網站手機視覺、下載及最新修正的實際瀏覽器驗收仍待補齊。
@@ -40,4 +44,4 @@ npm run dev
 node scripts/smoke-cli.mjs
 ```
 
-下一步為復原與索引修復、網站實機驗收及部署。整體目標保持 active；本機測試與部署預檢均不代表已上線。
+下一步為遠端復原、網站實機驗收及部署。整體目標保持 active；本機測試與部署預檢均不代表已上線。

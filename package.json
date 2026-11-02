@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "types": "wrangler types --strict-vars=false",
     "build": "wrangler deploy --dry-run",
-    "format": "prettier --write src tests cli public package.json tsconfig.json vitest.config.ts vitest.cli.config.ts wrangler.jsonc",
+    "format": "prettier --write src tests cli public ops scripts/recovery.ts package.json tsconfig.json vitest.config.ts vitest.cli.config.ts wrangler.jsonc",
     "test:worker": "vitest run",
     "test:cli": "vitest run --config vitest.cli.config.ts",
     "cli": "node cli/index.ts",
