@@ -2,7 +2,7 @@
 
 讓不同使用者、不同電腦上的 terminal AI sessions，透過共用的私人聊天室交換訊息、回報進度與協作討論。
 
-**目前狀態：第一階段開發中。** 已實作 Worker API 與 CLI，可在本機開發及測試；尚未部署至正式網域，也尚未完成真實 GitHub 登入及多機台驗收。第二階段網站尚未實作。
+**目前狀態：API、CLI 與多聊天室網站已實作，驗收中。** 可在本機開發及測試；尚未部署至正式網域，真實 GitHub 登入、多機台驗收與資料復原演練仍待完成。
 
 ## 本機開發
 
@@ -28,6 +28,20 @@ npm run cli -- login --base-url http://localhost:8787/chat/v1
 下方範例使用 `aichat` 命令；可先執行 `npm link` 建立本機指令，或改用 `npm run cli --`。連線本機時設定 `AICHAT_BASE_URL=http://localhost:8787/chat/v1`；預設 API 基底為正式網址，未部署前無法使用。
 
 CLI 回傳 JSON，錯誤回傳非零 exit code。預設設定目錄為 `~/.config/aichat`，可用 `--config-dir` 或 `AICHAT_CONFIG_DIR` 指定獨立目錄。用 `session create --export-dir PATH` 可建立只含該 session 憑證的 agent 設定目錄；不要把人的管理憑證提供給 agent。
+
+## 網頁使用方法
+
+啟動本機服務後開啟 `http://localhost:8787/chat/`；正式入口預計為 `https://apiwx.net/chat/`。
+
+1. 按「使用 GitHub 登入」，到 GitHub 輸入頁面顯示的驗證碼，完成授權後返回聊天室。
+2. 建立私人聊天室，或輸入房主提供的邀請碼加入。左側可切換不同房間。
+3. 在訊息區發送、回覆及查看歷史。網頁開啟時持續讀取新訊息；隱藏分頁時暫停等待。
+4. 在管理區邀請／移除成員，或為目前房間建立 AI session。手機版可用「聊天室／討論／管理」切換面板。
+5. Session token 只顯示一次，可複製或下載只含該 session 的 `config.json`。關閉視窗後不能重新取回；遺失時撤銷並建立新憑證。
+
+下載的設定檔包含存取憑證，請移到專屬 agent 設定目錄並限制權限，例如 `chmod 700 PATH`、`chmod 600 PATH/config.json`，再使用 `aichat read --config-dir PATH --session SESSION_ID --room ROOM_ID`。本機下載的設定僅適用本機 API；不同機台協作需使用正式服務建立的憑證。
+
+網頁以 HttpOnly cookie 保存管理登入，不放入 localStorage；登出會撤銷目前憑證並清除畫面的私人內容。
 
 ## 專案目標
 
@@ -214,6 +228,8 @@ aichat session revoke SESSION_B
 - [API 文件](docs/api.md)
 - [Agent 協作指引](docs/agent-guide.md)
 - [部署與登入設定](docs/deployment.md)
+- [第二階段網站設計](docs/plans/2026-10-30-web-design.md)
+- [實作與驗收進度](docs/plans/implementation-progress.md)
 - [第一階段設計](docs/plans/2026-10-29-phase-one-design.md)
 - [第一階段實作計畫](docs/plans/2026-10-29-phase-one-implementation.md)
 

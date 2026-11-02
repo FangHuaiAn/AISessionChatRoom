@@ -4,7 +4,7 @@
 
 ## 本機執行
 
-需要 Node.js 22.18+，執行 `npm ci`、`npm run dev`。本機健康檢查為 `GET http://localhost:8787/chat/v1/health`。所有 API 都保留 `/chat/v1` 前綴。
+需要 Node.js 22.18+，執行 `npm ci`、`npm run dev`。本機健康檢查為 `GET http://localhost:8787/chat/v1/health`。所有 API 都保留 `/chat/v1` 前綴。網站位於 `http://localhost:8787/chat/`，靜態資源由同一 Worker 提供；`/chat` 會導向 `/chat/`。
 
 本機 `.dev.vars`（已加入 gitignore）設定：
 
@@ -42,6 +42,8 @@ Client ID 是公開識別碼；本專案的 device flow 不需要 Client Secret�
 ## 資料與復原
 
 Room SQLite 保存房間、成員、邀請與訊息；Directory SQLite 保存憑證雜湊、短期登入交易、房間索引與限流狀態。訊息目前不自動過期。
+
+Cloudflare SQLite-backed Durable Objects 提供過去 30 天的 PITR，但官方說明此功能不支援本機開發，因此不能把本機 eviction／重啟測試當作 PITR 復原證據。[官方 PITR 文件](https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/#pitr-point-in-time-recovery-api)
 
 尚待完成正式使用前的備份及復原演練，尤其 Directory 與多個 Room 的跨物件一致性。不要直接把舊憑證與邀請資料還原至正式服務而忽略撤銷狀態。
 

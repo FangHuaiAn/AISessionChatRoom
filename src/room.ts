@@ -32,7 +32,8 @@ type Invite = {
   used_by: string | null;
 };
 export class Room extends DurableObject<Env> {
-  private waiters = new Set<() => void>();
+  private waiters = new Map<string, { wake: () => void; cancelled: boolean }>();
+  private cancelledWaits = new Map<string, ReturnType<typeof setTimeout>>();
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     this.ctx.storage.sql
@@ -100,6 +101,19 @@ export class Room extends DurableObject<Env> {
     });
     return this.info();
   }
+  listMembers(principal: Principal) {
+    const room = this.authorize(principal);
+    const members = this.ctx.storage.sql
+      .exec<{ user_id: string; joined_at: number }>(
+        "SELECT * FROM members ORDER BY joined_at,user_id",
+      )
+      .toArray()
+      .map((member) => ({
+        ...member,
+        role: member.user_id === room.owner_id ? "owner" : "member",
+      }));
+    return { members };
+  }
   describe(principal: Principal) {
     return this.authorize(principal);
   }
@@ -160,7 +174,7 @@ export class Room extends DurableObject<Env> {
     return { ok: true };
   }
   private notify() {
-    for (const wake of this.waiters) wake();
+    for (const waiter of this.waiters.values()) waiter.wake();
     this.waiters.clear();
   }
   send(principal: Principal, input: MessageInput): Message {
@@ -230,31 +244,54 @@ export class Room extends DurableObject<Env> {
       has_more: rows.length > limit,
     };
   }
+  cancelWait(id: string) {
+    const waiter = this.waiters.get(id);
+    if (waiter) {
+      waiter.cancelled = true;
+      waiter.wake();
+      this.waiters.delete(id);
+      return;
+    }
+    if (!this.cancelledWaits.has(id)) {
+      if (this.cancelledWaits.size >= 1000) return;
+      this.cancelledWaits.set(
+        id,
+        setTimeout(() => this.cancelledWaits.delete(id), 31000),
+      );
+    }
+  }
   async waitForMessages(
     principal: Principal,
     after: number,
     limit: number,
     seconds: number,
+    waitId: string = crypto.randomUUID(),
   ) {
+    if (this.cancelledWaits.has(waitId)) {
+      clearTimeout(this.cancelledWaits.get(waitId));
+      this.cancelledWaits.delete(waitId);
+      throw new Error("request_cancelled");
+    }
     const existing = this.read(principal, after, limit);
     if (existing.messages.length || seconds === 0) return existing;
     if (!Number.isFinite(seconds) || seconds < 0 || seconds > 30)
       throw new Error("bad_request");
     if (this.waiters.size >= 100) throw new Error("rate_limited");
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let wake!: () => void;
+    const waiter = { wake: () => {}, cancelled: false };
     const ready = new Promise<void>((resolve) => {
-      wake = resolve;
-      this.waiters.add(wake);
+      waiter.wake = resolve;
+      this.waiters.set(waitId, waiter);
       timer = setTimeout(resolve, seconds * 1000);
     });
     // No await occurs between checking SQL and registering the waiter.
     try {
       await ready;
+      if (waiter.cancelled) throw new Error("request_cancelled");
       return this.read(principal, after, limit);
     } finally {
       clearTimeout(timer);
-      this.waiters.delete(wake);
+      this.waiters.delete(waitId);
     }
   }
 }

@@ -101,3 +101,21 @@ test("member removal wakes waiters and denies reading", async () => {
   await room.removeMember(owner, "bob");
   await assertion;
 });
+test("cancellation releases a pending waiter and handles cancellation before registration", async () => {
+  const { room, principal } = await setup();
+  const id = crypto.randomUUID();
+  const pending = Promise.resolve(
+    room.waitForMessages(principal, 0, 100, 30, id),
+  );
+  const assertion = expect(pending).rejects.toThrow("request_cancelled");
+  await room.cancelWait(id);
+  await assertion;
+  await runInDurableObject(room, async (instance) => {
+    expect(Reflect.get(instance, "waiters").size).toBe(0);
+  });
+  const early = crypto.randomUUID();
+  await room.cancelWait(early);
+  await expect(
+    Promise.resolve(room.waitForMessages(principal, 0, 100, 30, early)),
+  ).rejects.toThrow("request_cancelled");
+});

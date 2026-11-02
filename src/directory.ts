@@ -70,6 +70,33 @@ export class Directory extends DurableObject<Env> {
       return true;
     });
   }
+  listSessions(userId: string, after = "") {
+    const rows = this.ctx.storage.sql
+      .exec<{
+        id: string;
+        name: string;
+        rooms: string;
+        expires_at: number;
+        revoked: number;
+      }>(
+        "SELECT id,name,rooms,expires_at,revoked FROM credentials WHERE user_id=? AND kind='session' AND id>? ORDER BY id LIMIT 101",
+        userId,
+        after,
+      )
+      .toArray();
+    const sessions = rows
+      .slice(0, 100)
+      .map((row) => ({
+        ...row,
+        rooms: JSON.parse(row.rooms),
+        revoked: Boolean(row.revoked),
+      }));
+    return {
+      sessions,
+      next_cursor: sessions.at(-1)?.id ?? after,
+      has_more: rows.length > 100,
+    };
+  }
   recordRoom(userId: string, roomId: string) {
     this.ctx.storage.sql.exec(
       "INSERT OR IGNORE INTO room_index VALUES (?,?)",
@@ -153,7 +180,16 @@ export class Directory extends DurableObject<Env> {
         const tokenHash = await hashToken(token);
         const id = crypto.randomUUID();
         const expiresAt = Date.now() + 86400000;
-        this.ctx.storage.transactionSync(() => {
+        const committed = this.ctx.storage.transactionSync(() => {
+          const current = this.ctx.storage.sql
+            .exec<LoginRow>("SELECT * FROM logins WHERE hash=?", hash)
+            .toArray()[0];
+          if (
+            !current ||
+            current.status !== "pending" ||
+            current.expires_at <= Date.now()
+          )
+            return false;
           this.ctx.storage.sql.exec(
             "INSERT INTO credentials (id,token_hash,user_id,kind,name,rooms,expires_at) VALUES (?,?,?,?,?,?,?)",
             id,
@@ -172,7 +208,9 @@ export class Directory extends DurableObject<Env> {
             expiresAt,
             hash,
           );
+          return true;
         });
+        if (!committed) return { status: "expired_token" };
         return {
           status: "complete",
           token,

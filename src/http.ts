@@ -8,6 +8,7 @@ const statuses: Record<string, number> = {
   payload_too_large: 413,
   rate_limited: 429,
   not_configured: 503,
+  request_cancelled: 499,
 };
 export function json(value: unknown, status = 200): Response {
   return Response.json(value, {

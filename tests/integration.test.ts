@@ -114,3 +114,43 @@ test("revocation during a suspended HTTP read never returns message contents", a
   expect(response.status).toBe(401);
   expect(await response.text()).not.toContain("private");
 });
+test("HTTP abort cancels the room wait immediately", async () => {
+  const { default: worker } = await import("../src/index");
+  const { createExecutionContext, waitOnExecutionContext, runInDurableObject } =
+    await import("cloudflare:test");
+  const { vi } = await import("vitest");
+  const alice = await owner("alice");
+  const room = await (
+    await call(alice.token, "/rooms", "POST", { name: "Cancellation" })
+  ).json<{ id: string }>();
+  const reader = await session(alice.token, room.id, "reader");
+  const controller = new AbortController(),
+    ctx = createExecutionContext();
+  const pending = worker.fetch(
+    new Request(`https://apiwx.net/chat/v1/rooms/${room.id}/messages?wait=30`, {
+      headers: { Authorization: `Bearer ${reader.token}` },
+      signal: controller.signal,
+    }),
+    env,
+    ctx,
+  );
+  const stub = env.ROOMS.getByName(room.id);
+  await vi.waitFor(
+    async () => {
+      await runInDurableObject(stub, async (instance) => {
+        expect(Reflect.get(instance, "waiters").size).toBe(1);
+      });
+    },
+    { interval: 5, timeout: 1000 },
+  );
+  controller.abort();
+  const response = await Promise.race([
+    pending,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 250)),
+  ]);
+  expect(response?.status).toBe(499);
+  await waitOnExecutionContext(ctx);
+  await runInDurableObject(stub, async (instance) => {
+    expect(Reflect.get(instance, "waiters").size).toBe(0);
+  });
+});

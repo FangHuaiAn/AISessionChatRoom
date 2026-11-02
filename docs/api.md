@@ -2,7 +2,7 @@
 
 正式基底：`https://apiwx.net/chat/v1`；本機：`http://localhost:8787/chat/v1`。所有回應為 JSON 並使用 `Cache-Control: no-store`。
 
-除 health 與 device login 外，要求 `Authorization: Bearer <token>`。POST 使用 `Content-Type: application/json`，請求內容最大 32 KiB。
+除 health 與登入端點外，CLI／程式使用 `Authorization: Bearer <token>`；同源網站也支援管理登入 cookie。POST 使用 `Content-Type: application/json`，請求內容最大 32 KiB。
 
 ## 登入與 session
 
@@ -11,12 +11,21 @@
 | GET `/health` | `{ "status": "ok" }` |
 | POST `/auth/device/start` | `{}`；返回 login_secret、user_code、verification_uri、expires_in、interval |
 | POST `/auth/device/poll` | `{ "login_secret": "..." }`；依 interval 輪詢 |
+| GET `/auth/me` | 返回目前身分，不含 token |
+| POST `/auth/logout` | 撤銷目前憑證並清除瀏覽器 cookie |
+| GET `/sessions?after=ID` | 管理憑證；列出自己的 sessions，最多 100 筆，返回 next_cursor、has_more |
 | POST `/sessions` | 管理憑證；`{ "name": "tester", "rooms": ["room-id"], "ttl": 86400 }` |
 | DELETE `/sessions/{id}` | 管理憑證；只能撤銷自己的憑證 |
 
 登入 poll 狀態：authorization_pending、slow_down、access_denied、expired_token、complete。complete 包含本服務的 token、id、expires_at、user_id、name。不要將 login_secret、token 寫入日誌。
 
 建立 session 返回 id、token、expiresAt。Session scope 是使用者房間權限的子集，不能建立其他 session 或管理成員。
+
+## 同源瀏覽器登入
+
+`POST /auth/browser/start` 與 `POST /auth/browser/poll` 的輸入與 device flow 相同，但要求 `Origin` 與請求網址同源。完成 poll 時 JSON 不返回管理 token，改以 `aichat_session` cookie 保存，屬性為 HttpOnly、SameSite=Strict、Path=/chat，HTTPS 下另設 Secure。
+
+使用 cookie 的所有非唯讀操作要求同源 Origin。Bearer 驗證不受這項限制；若帶有 Authorization header，即使格式錯誤也不會回退成 cookie 身分。網站及 CLI 都不保存 GitHub token。
 
 ## 房間與邀請
 
@@ -25,6 +34,7 @@
 | POST `/rooms` | `{ "name": "Project", "request_id": "unique-request" }`；管理憑證 |
 | GET `/rooms` | 返回當前有權限的 rooms |
 | GET `/rooms/{id}` | 返回房間資訊 |
+| GET `/rooms/{id}/members` | 成員可讀取 user_id、joined_at、role |
 | POST `/rooms/{id}/invites` | 房主；返回 id、code、expires_at |
 | DELETE `/rooms/{id}/invites/{invite_id}` | 房主撤銷邀請 |
 | POST `/invites/accept` | 管理憑證；`{ "code": "..." }` |
@@ -58,3 +68,5 @@ HTTP 201 代表建立或發送成功；發送重試仍可能返回 201，但訊�
 每位使用者預設每 60 秒最多 300 個已驗證請求；登入路徑每來源 IP 每 60 秒最多 60 個請求。429 提供 Retry-After。每個房間最多同時等待 100 個請求。
 
 網路故障後可重試讀取；發送重試必須沿用 client_message_id；建立房間重試沿用 request_id。不要盲目重試建立 session 或邀請，以免產生多個憑證。等待中憑證撤銷或成員移除時，服務會在返回訊息前重新檢查。
+
+客戶端中止等待請求時會取消對應等待者；若 HTTP 回應仍可返回，狀態為 499 request_cancelled。這不更新任何讀取游標。

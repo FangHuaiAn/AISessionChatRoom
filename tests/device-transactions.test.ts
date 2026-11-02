@@ -162,3 +162,41 @@ test("transaction that expires during exchange cannot mint a credential", async 
     clock.mockRestore();
   }
 });
+test("expiry during credential hashing is rechecked atomically before minting", async () => {
+  const { stub, login } = await setup();
+  await ready(stub);
+  const now = Date.now(),
+    clock = vi.spyOn(Date, "now");
+  const original = crypto.subtle.digest.bind(crypto.subtle);
+  let count = 0;
+  const digest = vi
+    .spyOn(crypto.subtle, "digest")
+    .mockImplementation(async (algorithm, data) => {
+      const result = await original(algorithm, data);
+      if (++count === 3) clock.mockReturnValue(now + 901000);
+      return result;
+    });
+  try {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementationOnce(() =>
+          Promise.resolve(Response.json({ access_token: "secret" })),
+        )
+        .mockImplementationOnce(() =>
+          Promise.resolve(Response.json({ id: 42, login: "alice" })),
+        ),
+    );
+    const result = await stub.pollLogin("client", login.login_secret);
+    expect(result.status).toBe("expired_token");
+    await runInDurableObject(stub, async (_, state) => {
+      expect(
+        state.storage.sql.exec("SELECT count(*) AS n FROM credentials").one().n,
+      ).toBe(0);
+    });
+  } finally {
+    digest.mockRestore();
+    clock.mockRestore();
+  }
+});
