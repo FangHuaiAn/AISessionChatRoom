@@ -8,7 +8,7 @@ import { ApiClient } from "./client.ts";
 import { ConfigStore } from "./config.ts";
 const HELP = `AI Session ChatRoom
   login
-  room create --name NAME | room list
+  room create --name NAME | room list | room repair-index --room ID
   invite create --room ID | invite accept | invite revoke ID --room ID
   member remove USER_ID --room ID
   session create --name NAME --room ID [--export-dir PATH] | session revoke ID
@@ -159,6 +159,24 @@ export async function runCli(
         true,
       ),
     );
+    return;
+  }
+  if (command === "room" && action === "repair-index") {
+    const roomId = room();
+    let after = "",
+      indexed = 0;
+    for (;;) {
+      const page = await client.request<{
+        indexed: number;
+        next_cursor: string;
+        has_more: boolean;
+      }>(`/rooms/${path(roomId)}/repair-index`, "POST", { after }, true);
+      indexed += page.indexed;
+      if (!page.has_more) break;
+      if (page.next_cursor <= after) throw new Error("Invalid repair cursor");
+      after = page.next_cursor;
+    }
+    output({ ok: true, room_id: roomId, indexed });
     return;
   }
   if (command === "room" && action === "list") {

@@ -84,13 +84,11 @@ export class Directory extends DurableObject<Env> {
         after,
       )
       .toArray();
-    const sessions = rows
-      .slice(0, 100)
-      .map((row) => ({
-        ...row,
-        rooms: JSON.parse(row.rooms),
-        revoked: Boolean(row.revoked),
-      }));
+    const sessions = rows.slice(0, 100).map((row) => ({
+      ...row,
+      rooms: JSON.parse(row.rooms),
+      revoked: Boolean(row.revoked),
+    }));
     return {
       sessions,
       next_cursor: sessions.at(-1)?.id ?? after,
@@ -103,6 +101,12 @@ export class Directory extends DurableObject<Env> {
       userId,
       roomId,
     );
+  }
+  recordRoomMembers(roomId: string, userIds: string[]) {
+    if (userIds.length > 100) throw new Error("bad_request");
+    this.ctx.storage.transactionSync(() => {
+      for (const userId of userIds) this.recordRoom(userId, roomId);
+    });
   }
   roomIds(userId: string): string[] {
     return this.ctx.storage.sql

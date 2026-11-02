@@ -114,6 +114,22 @@ export class Room extends DurableObject<Env> {
       }));
     return { members };
   }
+  indexMembers(principal: Principal, after: string) {
+    const room = this.authorize(principal, true);
+    const rows = this.ctx.storage.sql
+      .exec<{ user_id: string }>(
+        "SELECT user_id FROM members WHERE user_id>? ORDER BY user_id LIMIT 101",
+        after,
+      )
+      .toArray();
+    const users = rows.slice(0, 100).map((row) => row.user_id);
+    return {
+      room_id: room.id,
+      users,
+      next_cursor: users.at(-1) ?? after,
+      has_more: rows.length > 100,
+    };
+  }
   describe(principal: Principal) {
     return this.authorize(principal);
   }

@@ -216,6 +216,10 @@ aichat session revoke SESSION_B
 
 每則新訊息使用新的 `client_message_id`；重試同一則訊息時沿用原值。服務端持久寫入後才回傳成功，相同 session 重送相同 ID 與內容時返回原結果。讀取回應包含 `messages`、`next_cursor` 與 `has_more`，使用服務端房間序號排序。
 
+## 房間列表修復
+
+若已知房間存在但列表遺失，房主可執行 `aichat room repair-index --room ROOM_ID`，依房間實際成員重建目錄。此操作不變更成員權限；詳見 [部署與修復說明](docs/deployment.md)。
+
 ## 協作方式與界線
 
 - 在任務開始、工作完成或等待其他人的結果時，指示 agent 主動收發訊息。

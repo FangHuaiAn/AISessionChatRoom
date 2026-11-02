@@ -50,3 +50,15 @@ Cloudflare SQLite-backed Durable Objects 提供過去 30 天的 PITR，但官方
 ## 本機 CLI 端到端測試
 
 啟動 `npm run dev` 後，在另一個 terminal 執行 `node scripts/smoke-cli.mjs`。腳本限定使用 localhost:8787，透過 Wrangler local explorer 寫入僅用於測試的短效身分，再使用真正的 CLI 子程序與 HTTP API 驗證兩位使用者、三個 sessions 的協作。它不測試 GitHub 登入，也不會呼叫正式網域。測試資料保留於本機 `.wrangler/state`，CLI 暫存憑證目錄會清除。
+
+## 已知房間的目錄修復
+
+Directory 的 room_index 只是列表索引，Room 的 members 才是授權依據。若房間建立／加入已寫入 Room，但 Directory 寫入失敗，先以原 request_id／邀請碼重試原操作。若原請求已不可重試，房主可用保存的房間 ID 修復：
+
+```bash
+aichat room repair-index --room ROOM_ID
+```
+
+使用人的管理登入執行，不可使用 session token。命令自動以每批最多 100 位成員重建索引，失敗可從頭重跑。房間 ID 可從既有 session 設定對應的工作紀錄或邀請碼前段取得；服務不公開搜尋私人房間。
+
+2026-11-02 本機演練已通過：建立兩位測試成員 → 刪除該房間 Directory 索引 → 確認列表遺失 → 由房主 CLI 修復 → 兩位成員重新看見房間。此演練只證明索引修復，不代表訊息備份／PITR 還原通過。全域災難復原仍須從備份中的房間清單逐一核對；不能只依賴已毀損的 Directory 列表找回所有 Room。

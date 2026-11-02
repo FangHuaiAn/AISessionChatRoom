@@ -176,6 +176,23 @@ export default {
           throw new Error("not_found");
         return json({ ok: true });
       }
+      const repairRoute = route.match(/^\/rooms\/([^/]+)\/repair-index$/);
+      if (repairRoute && method === "POST") {
+        const input = await body(request);
+        const after =
+          input.after === undefined || input.after === ""
+            ? ""
+            : string(input.after, 256);
+        const page = await env.ROOMS.getByName(
+          segment(repairRoute[1]),
+        ).indexMembers(principal, after);
+        await directory.recordRoomMembers(page.room_id, page.users);
+        return json({
+          indexed: page.users.length,
+          next_cursor: page.next_cursor,
+          has_more: page.has_more,
+        });
+      }
       const messageRoute = route.match(/^\/rooms\/([^/]+)\/messages$/);
       if (messageRoute) {
         const room = env.ROOMS.getByName(segment(messageRoute[1]));

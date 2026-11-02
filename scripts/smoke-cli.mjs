@@ -32,6 +32,14 @@ try{
  const room=cli('alice',['room','create','--name','CLI smoke'],alice);
  const invite=cli('alice',['invite','create','--room',room.id],alice);
  cli('bob',['invite','accept','--stdin'],bob,invite.code+'\n');
+ // Deliberately lose only this disposable room's directory rows, then rebuild via the real owner CLI.
+ const lostIndex=await(await fetch(origin+'/cdn-cgi/local/explorer/api/workers/durable_objects/namespaces/ai-session-chatroom-Directory/query',{
+  method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({durable_object_name:'directory',queries:[{sql:'DELETE FROM room_index WHERE room_id=?',params:[room.id]}]})
+ })).json();
+ assert.equal(lostIndex.success,true);
+ assert.equal(cli('bob',['room','list'],bob).rooms.some(r=>r.id===room.id),false);
+ assert.equal(cli('alice',['room','repair-index','--room',room.id],alice).indexed,2);
+ assert.equal(cli('bob',['room','list'],bob).rooms.some(r=>r.id===room.id),true);
  const a1=cli('alice',['session','create','--room',room.id,'--name','backend'],alice);
  const a2=cli('alice',['session','create','--room',room.id,'--name','review'],alice);
  const b1=cli('bob',['session','create','--room',room.id,'--name','tester'],bob);
@@ -45,7 +53,7 @@ try{
  cli('bob',['ack','--room',room.id,'--session',b1.id,'--cursor',String(reply.seq)]);
  assert.equal(cli('bob',['read','--room',room.id,'--session',b1.id]).messages.length,0);
  cli('bob',['session','revoke',b1.id],bob);
- console.log('PASS: real local HTTP and CLI — 2 users, 3 sessions, invitation, deduplication, reply, independent cursors, ack, revocation.');
+ console.log('PASS: real local HTTP and CLI — 2 users, 3 sessions, invitation, deduplication, reply, independent cursors, ack, revocation, lost-index repair.');
 }catch(error){
  // Child-process failures may contain captured secrets; never print the error object.
  console.error('Local CLI smoke failed. Inspect the command implementation and local server logs.');process.exitCode=1;

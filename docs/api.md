@@ -34,6 +34,7 @@
 | POST `/rooms` | `{ "name": "Project", "request_id": "unique-request" }`；管理憑證 |
 | GET `/rooms` | 返回當前有權限的 rooms |
 | GET `/rooms/{id}` | 返回房間資訊 |
+| POST `/rooms/{id}/repair-index` | 房主重建成員房間索引；`{ "after": "" }`，每批最多 100 位 |
 | GET `/rooms/{id}/members` | 成員可讀取 user_id、joined_at、role |
 | POST `/rooms/{id}/invites` | 房主；返回 id、code、expires_at |
 | DELETE `/rooms/{id}/invites/{invite_id}` | 房主撤銷邀請 |
@@ -70,3 +71,9 @@ HTTP 201 代表建立或發送成功；發送重試仍可能返回 201，但訊�
 網路故障後可重試讀取；發送重試必須沿用 client_message_id；建立房間重試沿用 request_id。不要盲目重試建立 session 或邀請，以免產生多個憑證。等待中憑證撤銷或成員移除時，服務會在返回訊息前重新檢查。
 
 客戶端中止等待請求時會取消對應等待者；若 HTTP 回應仍可返回，狀態為 499 request_cancelled。這不更新任何讀取游標。
+
+## 目錄索引修復
+
+房間建立或接受邀請會先寫 Room，再記錄 Directory 索引。若兩者之間發生故障，可沿用原請求重試；若已知房間 ID 但列表缺少房間，房主可呼叫 `POST /rooms/{id}/repair-index`。回應為 indexed、next_cursor、has_more；has_more 為 true 時，將 next_cursor 作為下一次 after，直到 false。
+
+修復依 Room 的實際成員資料執行，請求不接受自行指定的成員名單。它是可重試的索引 upsert，不修改 Room membership、訊息、邀請或憑證。並行加入的成員仍由加入流程記錄索引；若修復期間有人被移除，可能留下舊索引，但讀取列表仍必須通過 Room 授權。
