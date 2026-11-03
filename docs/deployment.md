@@ -74,7 +74,7 @@ Room SQLite 保存房間、成員、邀請與訊息；Directory SQLite 保存憑
 
 Cloudflare SQLite-backed Durable Objects 提供過去 30 天的 PITR，但官方說明此功能不支援本機開發，因此不能把本機 eviction／重啟測試當作 PITR 復原證據。[官方 PITR 文件](https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/#pitr-point-in-time-recovery-api)
 
-已提供私有維運入口與可攜式備份／空環境還原工具，本機跨 Worker 演練已通過；操作、權限重設與一致性界線見 [備份與復原](recovery.md)。遠端 service binding 與正式環境復原仍待驗證。不要直接把舊憑證與邀請資料還原至正式服務而忽略撤銷狀態。
+已提供私有維運入口與可攜式備份／空環境還原工具，本機跨 Worker 演練已通過；操作、權限重設與一致性界線見 [備份與復原](recovery.md)。遠端 service binding 已使用獨立無公開路由的 Worker 與合成資料驗證；正式環境資料與真實登入驗收仍待完成。不要直接把舊憑證與邀請資料還原至正式服務而忽略撤銷狀態。
 
 ## 本機 CLI 端到端測試
 

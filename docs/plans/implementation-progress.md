@@ -1,6 +1,6 @@
 # 實作進度
 
-更新：2026-11-02。開發 worktree：.worktrees/implementation；API、CLI 與網站已整合至主要工作目錄。
+更新：2026-11-03。開發 worktree：.worktrees/implementation；API、CLI 與網站已整合至主要工作目錄。
 
 ## 已實作與驗證
 
@@ -24,13 +24,15 @@
 - 備份檔預檢的獨立 review 發現完整 schema／reply／唯一性檢查不足；已以5種有效 SHA 但非法資料重現並修正。共用 validator 在任何目標寫入前檢查全部 archive；Maintenance 先驗 header 再登記 registry。獨立複核確認原 P2 已解決，archive 7/7、Worker recovery 9/9 通過。
 - 維運憑證 ops/.dev.vars、本機備份與演練資料均在 gitignore 內，不提交；操作文件為 docs/recovery.md。
 
+- 2026-11-02 遠端邏輯復原通過：Cloudflare 私有測試 Worker，2房間105訊息，還原、重複還原、備份回讀逐欄一致。2026-11-03 驗證部署版本未被更改後刪除專用 Worker，GET settings 返回404；正式 zone routes 仍為空。紀錄：docs/remote-recovery-verification.json。
+
 ## 尚未完成；不可宣稱專案完成
 
 1. 真實 GitHub OAuth App Client ID 尚未設定。已詢問已啟用 Device Flow 的公開 Client ID；不需要 Client Secret。
-2. 房間 registry、私有維運 service entrypoint、備份清單／JSONL、校驗及空環境復原工具已完成。本機跨 Worker 演練通過；遠端 service binding／正式環境復原仍待驗證，PITR 未演練。Directory 與 Room 非跨物件交易，Room membership 才是授權依據。
+2. 房間 registry、私有維運 service entrypoint、備份清單／JSONL、校驗及空環境復原工具已完成。本機與遠端 service binding 合成資料演練通過；正式環境資料尚未建立，PITR 未演練。Directory 與 Room 非跨物件交易，Room membership 才是授權依據。
 3. 正式路由設定及唯讀 preflight 已完成；尚未發布。2026-11-02 核對 zone active、既有 routes 為空、首頁 200、chat 入口 404。DNS API 權限不足，仍待 dashboard 檢查。部署後驗證腳本已提供，尚無上線成功證據。
 4. 真實 GitHub 登入、兩位使用者／兩台實體機台／三 sessions 驗收尚未做。
-5. 網站手機視覺、下載及最新修正的實際瀏覽器驗收仍待補齊。
+5. 網站手機視覺、下載及最新修正的實際瀏覽器驗收仍待補齊。2026-11-03 嘗試 DNS dashboard 唯讀檢查時使用者切回正在使用的 Safari 分頁，且 CUA 無獨立 browser 連線，已停止前景操作並詢問測試視窗或手動驗收方式。
 
 ## 可重跑指令
 
@@ -44,4 +46,4 @@ npm run dev
 node scripts/smoke-cli.mjs
 ```
 
-下一步為遠端復原、網站實機驗收及部署。整體目標保持 active；本機測試與部署預檢均不代表已上線。
+下一步為網站實機驗收、DNS dashboard 檢查及正式登入／部署。整體目標保持 active；本機測試與部署預檢均不代表已上線。

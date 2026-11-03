@@ -1,0 +1,15 @@
+{
+  "worker": "aichat-recovery-check-305d30b0",
+  "version_id": "80788326-86ef-419a-b858-4389433ff11d",
+  "verified_at": "2026-11-02T07:47:54.941Z",
+  "result": {
+    "rooms": 2,
+    "messages": 105,
+    "repeat_restore": "pass",
+    "round_trip": "all fields match"
+  },
+  "public_routes": [],
+  "data": "synthetic only",
+  "cleaned_at": "2026-11-03T06:37:39.918Z",
+  "cleanup": "Worker deletion verified via 404"
+}

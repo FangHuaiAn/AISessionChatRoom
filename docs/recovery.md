@@ -67,7 +67,7 @@ node scripts/recovery.ts restore /ABSOLUTE/PATH/NEW_BACKUP_DIRECTORY http://127.
 
 完成後須比對備份與目標的訊息數、ID、seq、body、reply_to、作者及時間，確認房主重新登入後可管理房間、其他舊成員及邀請不會自動恢復存取。
 
-2026-11-02 已在真正的本機 Wrangler 服務完成 7 房間、11 訊息的跨 Worker 還原，逐欄比對一致。測試另涵蓋 102 則分頁歷史、eviction 後續傳、錯誤分頁整批 rollback、校驗失敗零寫入、未完成還原不可讀及舊邀請無效。此證據不代表已測試遠端 Cloudflare 備份或 PITR。
+2026-11-02 已在真正的本機 Wrangler 服務完成 7 房間、11 訊息的跨 Worker 還原，逐欄比對一致。測試另涵蓋 102 則分頁歷史、eviction 後續傳、錯誤分頁整批 rollback、校驗失敗零寫入、未完成還原不可讀及舊邀請無效。另於 2026-11-02 完成遠端 Cloudflare service binding 演練：2 房間（其中一間空房）、105 則合成訊息，還原兩次後重新下載備份，所有欄位一致。測試 Worker 無公開路由、停用 workers.dev 與 preview URLs，驗收後已刪除並核對 404。見 [遠端驗收紀錄](remote-recovery-verification.json)。這仍不代表 PITR 或真實登入通過。
 
 ## 遠端服務
 
@@ -85,6 +85,6 @@ npx wrangler dev --config ops/wrangler.jsonc --env remote
 
 ## PITR 與限制
 
-Cloudflare SQLite Durable Objects 的 PITR 可作為短期平台復原補充；它可能還原舊成員、邀請與憑證狀態，不能直接復原後重新開放服務而略過撤銷核對。本專案尚未演練遠端 PITR，不能以本機測試宣稱通過。
+Cloudflare SQLite Durable Objects 的 PITR 可作為短期平台復原補充；它可能還原舊成員、邀請與憑證狀態，不能直接復原後重新開放服務而略過撤銷核對。本專案已驗證遠端邏輯備份與還原；尚未演練平台 PITR，兩者不能互相代替驗收證據。
 
 參考：[remote service binding 與 Durable Objects](https://developers.cloudflare.com/workers/local-development/#using-remote-resources-with-durable-objects-and-workflows)、[Cloudflare PITR](https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/#pitr-point-in-time-recovery-api)。
