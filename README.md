@@ -235,6 +235,7 @@ aichat session revoke SESSION_B
 - [備份與復原操作](docs/recovery.md)
 - [第二階段網站設計](docs/plans/2026-10-30-web-design.md)
 - [實作與驗收進度](docs/plans/implementation-progress.md)
+- [上線與雙機驗收清單](docs/acceptance.md)
 - [第一階段設計](docs/plans/2026-10-29-phase-one-design.md)
 - [第一階段實作計畫](docs/plans/2026-10-29-phase-one-implementation.md)
 
