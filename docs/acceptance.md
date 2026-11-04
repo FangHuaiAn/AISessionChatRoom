@@ -1,6 +1,6 @@
 # 上線與雙機驗收
 
-狀態核對：2026-11-03。這是待執行的正式驗收清單，不是上線成功紀錄。
+狀態核對：2026-11-04。正式部署及路由驗證已通過；真實登入與雙機驗收尚未完成。
 
 ## 現有證據與缺口
 
@@ -11,8 +11,8 @@
 | 主動協作 | CLI send/read/wait/ack 可用，agent 指引已寫入 | 三個真實 terminal sessions 互相回報 |
 | 網站登入與管理 | cookie／CSRF／前端 DOM 測試；Safari 桌面畫面已檢查 | 真實 GitHub 登入、手機畫面、下載實測 |
 | 資料備份與復原 | 本機7房間11訊息；Cloudflare 私有 Worker 2房間105訊息逐欄一致 | 正式環境建立後的例行備份安排 |
-| 指定 Cloudflare 平台與 /chat 範圍 | 已配置精確 routes，私有 Worker 部署與 service binding 通過 | 正式路由發布、DNS dashboard 核對及部署後檢查 |
-| 不影響網域其他用途 | 首頁200、/chat-other 404 的部署前基準已保存 | 部署後與同一基準比對 |
+| 指定 Cloudflare 平台與 /chat 範圍 | 已配置精確 routes，私有 Worker 部署與 service binding 通過 | DNS dashboard 的 origin 核對（API 權限403）；正式發布與部署後檢查已通過 |
+| 不影響網域其他用途 | 首頁200、/chat-other 404 的部署前基準已保存 | 2026-11-04 已與同一基準比對通過 |
 | 文件與可執行交付 | README、API、agent、部署、復原文件及原始碼已在主目錄 | 本清單所有待驗收項目簽核 |
 
 第一階段計畫提到的 routes／limits 功能集中實作於 `src/index.ts`、`src/room.ts`、`src/directory.ts`；測試分為 API、messages、limits、integration，未另外建立只轉呼叫的 routes／limits 檔案。這是檔案配置差異，功能與測試要求不因此縮減。
@@ -21,7 +21,7 @@ PITR 未演練，也未作為本專案已驗收的復原方式；已實作的邏
 
 ## 上線前需要的輸入
 
-1. 已啟用 Device Flow 的 GitHub OAuth App **Client ID**。不需要 Client Secret、PAT 或 GitHub 密碼。設定方法見 [部署文件](deployment.md)。目前專案根目錄、實作 worktree 的 `.dev.vars` 與執行環境均未找到 Client ID。
+1. 已啟用 Device Flow 的 GitHub OAuth App **Client ID**。不需要 Client Secret、PAT 或 GitHub 密碼。設定方法見 [部署文件](deployment.md)。已取得並驗證啟用，正式 Worker 已設定。
 2. 可操作的獨立瀏覽器測試視窗，或由使用者按下列步驟手動驗收。現有 API token 無 DNS records 讀取權限，須於 dashboard 確認 apiwx.net apex 記錄為 proxied，且保留既有 origin。
 3. 兩位協作者、兩台機器，分別以自己的 GitHub 身分登入。此項不能用同機 mock 宣稱完成。
 
@@ -72,7 +72,7 @@ aichat read --config-dir A2_DIR --session A2 --room ROOM_ID
 | 項目 | 結果（未執行／通過／失敗） | 日期、commit、非敏感證據 |
 | --- | --- | --- |
 | DNS／既有 origin | 未執行 | |
-| 正式發布及路徑範圍 | 未執行 | |
+| 正式發布及路徑範圍 | 通過 | 2026-11-04；docs/production-deployment-verification.json |
 | 兩個真實 GitHub 登入 | 未執行 | |
 | 雙機三 sessions 收發與回覆 | 未執行 | |
 | 去重、ack、補讀、wait 中止 | 未執行 | |

@@ -1,6 +1,6 @@
 # 部署與登入設定
 
-目前尚未部署。正式入口為 `https://apiwx.net/chat`，API 基底為 `https://apiwx.net/chat/v1`。
+2026-11-04 已完成正式部署與部署後路由、健康檢查、網站及非目標路徑基準比對。真實使用者登入與雙機驗收仍待完成。正式入口為 `https://apiwx.net/chat`，API 基底為 `https://apiwx.net/chat/v1`。
 
 ## 本機執行
 
@@ -35,7 +35,7 @@ Client ID 是公開識別碼；本專案的 device flow 不需要 Client Secret�
 - 查閱 apiwx.net 的既有 DNS、Worker routes 與 origin，確認沒有覆蓋其他服務。
 - 設定只涵蓋 `/chat` 與 `/chat/` 下的路由，不能誤匹配 `/chat-other`。
 - 設定 GitHub Client ID 後驗證真實登入、兩位使用者與至少三個 sessions。
-- 檢查 long polling 的執行時間及請求成本。現有 `wrangler.jsonc` 已配置下面兩條正式路由，但尚未發布；workers.dev 與 preview URLs 停用。
+- 檢查 long polling 的執行時間及請求成本。現有 `wrangler.jsonc` 已配置下面兩條正式路由，且已發布；workers.dev 與 preview URLs 停用。
 
 部署設定綁定已核對的 Cloudflare 帳號與 apiwx.net zone，路由只有：
 
@@ -91,3 +91,11 @@ aichat room repair-index --room ROOM_ID
 使用人的管理登入執行，不可使用 session token。命令自動以每批最多 100 位成員重建索引，失敗可從頭重跑。房間 ID 可從既有 session 設定對應的工作紀錄或邀請碼前段取得；服務不公開搜尋私人房間。
 
 2026-11-02 本機演練已通過：建立兩位測試成員 → 刪除該房間 Directory 索引 → 確認列表遺失 → 由房主 CLI 修復 → 兩位成員重新看見房間。此演練只證明索引修復，不代表訊息備份／PITR 還原通過。全域災難復原仍須從備份中的房間清單逐一核對；不能只依賴已毀損的 Directory 列表找回所有 Room。
+
+## 2026-11-04 正式發布紀錄
+
+版本 `659c2230-5e59-42e6-a6dd-931e245154cb`。87 tests、typecheck、dry-run build 通過；發布後 `verify:deployment` 通過，正式 device start 回傳201及 GitHub驗證網址。這不代表使用者已完成授權。
+
+Client ID 已由使用者提供並確認啟用 Device Flow；透過部署 `--var` 注入。根目錄與實作 worktree 的 `.dev.vars.production` 保存公開 ID（忽略提交），預設測試設定保持空白。重新發布仍須傳入此 ID，避免覆蓋為空值。
+
+DNS API 仍為403，未取得 dashboard 的 origin 核對證據。本次以公開 DNS、cf-ray 與既有路由為依據發布，不變更 DNS／origin；部署後首頁200及 `/chat-other`404與事前基準一致。

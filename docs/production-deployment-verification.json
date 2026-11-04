@@ -1,0 +1,65 @@
+{
+  "checked_at": "2026-11-04T02:45:56.599Z",
+  "account_id": "0cfbb72c4eab7aaf66611ab26f2e9d75",
+  "zone_id": "bf943899cf00a7ea36f8d1f077b477d2",
+  "worker": "ai-session-chatroom",
+  "expected_routes": [
+    "https://apiwx.net/chat",
+    "https://apiwx.net/chat/*"
+  ],
+  "routes": [
+    {
+      "id": "90a4ba5b58354177a5a93f5f53c8e5f5",
+      "pattern": "https://apiwx.net/chat",
+      "script": "ai-session-chatroom",
+      "request_limit_fail_open": false
+    },
+    {
+      "id": "4d50d200f2e54d02ae79b310029758e8",
+      "pattern": "https://apiwx.net/chat/*",
+      "script": "ai-session-chatroom",
+      "request_limit_fail_open": false
+    }
+  ],
+  "dns_api_status": 403,
+  "dns_records": null,
+  "public_addresses": [
+    "172.67.154.65",
+    "104.21.4.238",
+    "2606:4700:3034::ac43:9a41",
+    "2606:4700:3031::6815:4ee"
+  ],
+  "http": [
+    {
+      "path": "/",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html",
+      "cloudflare": true
+    },
+    {
+      "path": "/chat",
+      "status": 308,
+      "location": "/chat/",
+      "contentType": null,
+      "cloudflare": true
+    },
+    {
+      "path": "/chat/",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html",
+      "cloudflare": true
+    },
+    {
+      "path": "/chat-other",
+      "status": 404,
+      "location": null,
+      "contentType": null,
+      "cloudflare": true
+    }
+  ],
+  "version_id": "659c2230-5e59-42e6-a6dd-931e245154cb",
+  "device_start_status": 201,
+  "real_user_login_verified": false
+}

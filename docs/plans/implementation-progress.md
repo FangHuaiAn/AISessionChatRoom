@@ -49,3 +49,7 @@ node scripts/smoke-cli.mjs
 ```
 
 下一步為網站實機驗收、DNS dashboard 檢查及正式登入／部署。整體目標保持 active；本機測試與部署預檢均不代表已上線。
+
+## 2026-11-04 更新（取代上列部署與 Client ID 待辦狀態）
+
+使用者提供 Client ID，GitHub device code API確認啟用。87 tests、typecheck、build及diff檢查通過。正式版本 `659c2230-5e59-42e6-a6dd-931e245154cb` 已發布，verify:deployment通過；正式device start201。DNS未修改，API讀取仍403，採公開DNS及HTTP證據部署並比對非目標路徑。真人登入、雙機與手機／下載驗收仍未完成，不能宣稱整體目標完成。
