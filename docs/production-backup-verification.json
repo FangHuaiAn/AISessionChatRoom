@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-11-05T15:56:48.967Z",
+  "worker": "ai-session-chatroom",
+  "rooms": 0,
+  "uninitialized": 0,
+  "manifest_sha256": "bacb1ccba97b5865c3e3b63d6cd2667a5fd754773314334ec78f959c2ffbe671",
+  "directory_mode": "700",
+  "manifest_mode": "600",
+  "scope": "Empty production backup only; nonempty production backup and recurring schedule remain unverified"
+}
