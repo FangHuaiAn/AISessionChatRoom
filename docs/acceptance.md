@@ -75,9 +75,9 @@ aichat read --config-dir A2_DIR --session A2 --room ROOM_ID
 | 正式發布及路徑範圍 | 通過 | 2026-11-04；docs/production-deployment-verification.json |
 | 兩個真實 GitHub 登入 | 已確認一位；第二位待驗收 | 2026-11-06 使用者回報「已登入聊天室」；未獨立觀察瀏覽器，CLI登入尚未驗證 |
 | 雙機三 sessions 收發與回覆 | 未執行 | |
-| 去重、ack、補讀、wait 中止 | 未執行 | |
+| 去重、ack、補讀、wait 中止 | 單一正式 session 去重通過；其他待驗收 | 2026-11-06；docs/production-terminal-verification.json |
 | 撤銷與成員移除 | 未執行 | |
-| 桌面／手機網站與下載 | 未執行 | |
+| 桌面／手機網站與下載 | 網站下載設定已成功用於 CLI；畫面與手機待驗收 | 2026-11-06 使用者提供下載檔，實際CLI收發通過 |
 | 正式首次備份 | 空環境通過；有資料後待複驗 | 2026-11-05；docs/production-backup-verification.json，0房間；0700／0600權限通過 |
 
 失敗項目應記錄錯誤碼與重現步驟，不包含任何 token、邀請碼或私人訊息內容。所有必需項目有成功證據前，專案狀態維持未完成。
