@@ -5,5 +5,7 @@
   "send_read": true,
   "retry_same_message": true,
   "message_count_after_retry": 1,
-  "scope": "One real user, one machine, one session. Browser receipt, reply, second user and second machine remain pending."
+  "scope": "One real user and one machine; terminal and website bidirectional messaging verified. Second user and second machine remain pending.",
+  "terminal_to_website": "Confirmed by user screenshot",
+  "website_to_terminal": "CLI read received website response at seq 2"
 }
