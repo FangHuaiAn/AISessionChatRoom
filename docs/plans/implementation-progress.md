@@ -57,3 +57,7 @@ node scripts/smoke-cli.mjs
 ## 2026-11-05 上線後核對
 
 正式 verify:deployment 再次通過。透過本機8794私有橋接連線正式 Maintenance，backup成功，manifest為0房間／0未初始化登記；目錄0700、manifest0600通過。僅記錄計數、雜湊與權限至 docs/production-backup-verification.json，備份留在忽略提交的 .wrangler。橋接已結束（exit130）。空環境結果不代替有訊息的正式備份或例行排程；真實登入、雙機與網站實機驗收仍需使用者參與。
+
+## 2026-11-06 使用者登入確認
+
+使用者回報「已登入聊天室」，記錄為一位真實使用者的網站登入成功（使用者回報，非自動化或獨立瀏覽器觀察）。下一步為建立私人房間、建立限定房間的 session 並下載 CLI 設定，驗證 terminal 收發；第二位使用者及雙機驗收仍待完成。
